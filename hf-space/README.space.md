@@ -70,7 +70,7 @@ The demo deliberately fits OpenAI's import limits (â‰¤5 uniquely named skills, â
 
 ## Source
 
-Server source, smoke tests, and an OpenAI-skills-import compatibility analysis live in the working group's demo repo (`servers/skills-over-mcp-demo`). The skills are demo content authored for this server; the server packs nothing dynamic and is stateless, serving a startup snapshot with per-file SHA-256 digests.
+Server source, smoke tests, the OpenAI-skills-import compatibility analysis, and the confirmed Scan Tools interop results live at [olaservo/skills-over-mcp-demo](https://github.com/olaservo/skills-over-mcp-demo). The skills are demo content authored for this server; the server packs nothing dynamic and is stateless, serving a startup snapshot with per-file SHA-256 digests.
 
 ## License
 
