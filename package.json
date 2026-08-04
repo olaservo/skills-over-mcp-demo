@@ -1,0 +1,36 @@
+{
+  "name": "skills-over-mcp-demo",
+  "version": "0.1.0",
+  "description": "Demo MCP server serving Agent Skills per SEP-2640 v1 (Skills Extension), built on the v2 TypeScript SDK",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "skills-over-mcp-demo": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:http": "node dist/http.js",
+    "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/http.ts",
+    "smoke": "npm run build && tsx src/smoke.ts",
+    "smoke:http": "npm run build && tsx src/smoke-http.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@olaservo/ext-skills": "^0.12.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "Apache-2.0"
+}
