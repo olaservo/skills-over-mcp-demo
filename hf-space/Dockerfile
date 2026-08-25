@@ -18,6 +18,6 @@ RUN npm run build
 # against DNS rebinding; here the Space's routing is the access control.
 EXPOSE 7860
 
-# --tools-bridge: opt-in list_skills/read_skill tools (not part of SEP-2640;
+# --dice-roller: opt-in roll_dice tool + MCP Apps UI (not part of SEP-2640;
 # ChatGPT connector creation requires a working tools surface).
-CMD ["node", "dist/http.js", "--host", "0.0.0.0", "--port", "7860", "--public", "--tools-bridge"]
+CMD ["node", "dist/http.js", "--host", "0.0.0.0", "--port", "7860", "--public", "--dice-roller"]

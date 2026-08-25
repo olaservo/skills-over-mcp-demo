@@ -30,7 +30,7 @@ const { values, positionals } = parseArgs({
   args: process.argv.slice(2),
   allowPositionals: true,
   options: {
-    "tools-bridge": { type: "boolean", default: false },
+    "dice-roller": { type: "boolean", default: false },
   },
 });
 
@@ -43,7 +43,7 @@ logSkillMap(skillMap, skillsDir);
 
 serveStdio(
   buildServerFactory(skillMap, skillsDir, {
-    toolsBridge: values["tools-bridge"],
+    diceRoller: values["dice-roller"],
   }),
 );
 

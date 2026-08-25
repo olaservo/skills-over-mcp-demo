@@ -32,9 +32,9 @@ Modern clients (`versionNegotiation: { mode: "auto" }`) negotiate protocol revis
 | `skill://release-notes-writer/SKILL.md` | `templates/` supporting file |
 | `skill://secret-menu/SKILL.md` | **unlisted** — absent from `skills/list`, reachable via `skills/get` and the server-instructions pointer |
 
-Protocol surface: `skills/list` (verbatim frontmatter + complete `{uri, digest}` manifests, SEP-2549 `ttlMs`/`cacheScope` on 2026-07-28+ connections), `skills/get` (entries by URI, `-32602` for non-skills), `resources/read` (every file individually addressable), and `resources/directory/read`.
+Protocol surface: `skills/list` (verbatim frontmatter + complete `{uri, digest, size}` manifests, SEP-2549 `ttlMs`/`cacheScope` on 2026-07-28+ connections), `skills/get` (entries by URI, `-32602` for non-skills), `resources/read` (every file individually addressable), and `resources/directory/read`.
 
-**Tools bridge (enabled on this deployment, not part of SEP-2640)**: SEP-2640 defines no server-side tools — its reader-tool guidance is for host-provided tools. But tool-centric hosts need a tools surface (ChatGPT connector creation fails against a server whose `tools/list` errors), so this deployment runs with the opt-in `--tools-bridge` flag, adding two read-only tools: `list_skills` (the catalog: name, description, URI per listed skill) and `read_skill` (read any served skill file by `skill://` URI, unlisted skills included). SEP-aware hosts can ignore the tools and use the extension surface directly.
+**Dice roller tool (enabled on this deployment, not part of SEP-2640)**: SEP-2640 defines no server-side tools — its reader-tool guidance is for host-provided tools. But tool-centric hosts need a tools surface (ChatGPT connector creation fails against a server whose `tools/list` errors, and VS Code stops a server whose tools are disabled), so this deployment runs with the opt-in `--dice-roller` flag, adding one tool: `roll_dice` (executes dice notation such as `2d6+3` or `2d20kh` and renders the result with an MCP Apps UI). It pairs with the `tabletop-dice` skill without substituting for it, and it stays off the skills path: reaching a skill still goes through the extension surface. SEP-aware hosts can ignore the tool.
 
 ## Try it
 

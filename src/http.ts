@@ -53,7 +53,7 @@ const { values, positionals } = parseArgs({
     host: { type: "string", default: process.env.HOST ?? "127.0.0.1" },
     "allow-host": { type: "string", multiple: true, default: [] },
     public: { type: "boolean", default: false },
-    "tools-bridge": { type: "boolean", default: false },
+    "dice-roller": { type: "boolean", default: false },
   },
 });
 
@@ -72,7 +72,7 @@ const allowedHosts = [...LOCALHOST, ...values["allow-host"]];
 
 const handler = createMcpHandler(
   buildServerFactory(skillMap, skillsDir, {
-    toolsBridge: values["tools-bridge"],
+    diceRoller: values["dice-roller"],
   }),
 );
 const nodeHandler = toNodeHandler(handler);
