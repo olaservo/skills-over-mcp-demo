@@ -18,6 +18,8 @@ import {
   getSkill,
   readSkill,
   readSkillResource,
+  manifestOf,
+  checkSkillLimits,
   walkDirectory,
   discoverAndBuildCatalog,
 } from "@olaservo/ext-skills/client";
@@ -62,19 +64,26 @@ export async function runChecks(client: Client): Promise<string> {
   assert.equal(raw.cacheScope, "public");
   pass("skills/list: SEP-2549 ttlMs + cacheScope present (2026-07-28 scoping)");
 
-  // 4. Every listed entry carries frontmatter + complete resources manifest
+  // 4. Every listed entry carries frontmatter + a complete {uri, digest, size}
+  // manifest (these are static skills, so never "dynamic"), within the
+  // SEP's per-skill limits
   for (const entry of skills) {
     assert.ok(entry.frontmatter?.name, `${entry.uri} has frontmatter.name`);
     assert.ok(entry.frontmatter?.description, `${entry.uri} has description`);
+    const manifest = manifestOf(entry);
+    assert.ok(manifest, `${entry.uri} resources is an array, not "dynamic"`);
     assert.ok(
-      entry.resources?.some((r) => r.uri === entry.uri),
+      manifest.some((r) => r.uri === entry.uri),
       `${entry.uri} manifest includes SKILL.md itself`,
     );
-    for (const r of entry.resources ?? []) {
+    for (const r of manifest) {
       assert.match(r.digest, /^sha256:[0-9a-f]{64}$/);
+      assert.ok(Number.isInteger(r.size) && r.size > 0, `${r.uri} has a size`);
     }
+    const limits = checkSkillLimits(entry);
+    assert.ok(limits.withinLimits, `${entry.uri} within limits: ${limits.exceeded}`);
   }
-  pass("entries: verbatim frontmatter + sha256 digests for every file");
+  pass("entries: verbatim frontmatter + sha256 digest and size for every file, within limits");
 
   // 5. skills/get answers for the unlisted skill
   const secret = await getSkill(client, SECRET_URI);
@@ -94,10 +103,10 @@ export async function runChecks(client: Client): Promise<string> {
   assert.match(diceMd, /Tabletop Dice/);
   pass("readSkill: digest + frontmatter verification passed");
 
-  // 8. Verified supporting-file read
+  // 8. Verified supporting-file read (size + digest)
   const ref = await readSkillResource(client, dice, DICE_REF_URI);
   assert.match(ref.text ?? "", /Dice Notation Reference/);
-  pass("readSkillResource: supporting file verified against manifest digest");
+  pass("readSkillResource: supporting file verified against manifest size + digest");
 
   // 9. Directory enumeration
   const files = await walkDirectory(client, "skill://dice-roller/tabletop-dice");
