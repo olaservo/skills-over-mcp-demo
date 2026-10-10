@@ -10,7 +10,7 @@ npm run smoke       # build + end-to-end client checks over stdio
 npm run smoke:http  # same checks over streamable HTTP (the transport OpenAI's importer uses)
 ```
 
-Both smoke tests connect with `versionNegotiation: { mode: "auto" }` and assert the connection lands on the latest protocol revision (2026-07-28) and that `skills/list` carries the SEP-2549 caching attributes, which the SEP scopes to that revision.
+Both smoke tests connect with `versionNegotiation: { mode: "auto" }` and assert the connection lands on the latest protocol revision (2026-07-28) and that both `skills/list` and `skills/get` results carry the SEP-2549 caching attributes (`ttlMs`, `cacheScope`), which the SEP scopes to that revision. They also assert that `resources/read` of a `SKILL.md` returns `mimeType: text/markdown`.
 
 Or run the server directly for use from a host:
 

@@ -8,7 +8,9 @@
 import * as assert from "node:assert/strict";
 import type { Client } from "@modelcontextprotocol/client";
 import {
+  SKILLS_GET_METHOD,
   SKILLS_LIST_METHOD,
+  SkillsGetResultSchema,
   SkillsListResultSchema,
 } from "@olaservo/ext-skills";
 import {
@@ -90,6 +92,19 @@ export async function runChecks(client: Client): Promise<string> {
   assert.equal(secret.frontmatter?.name, "secret-menu");
   pass("skills/get: unlisted secret-menu retrievable by URI");
 
+  // 5b. Latest spec: the raw skills/get result is a CacheableResult too, so
+  // it MUST carry ttlMs + cacheScope on 2026-07-28+ connections (and no
+  // cursor: a single entry is not a list)
+  const rawGet = await client.request(
+    { method: SKILLS_GET_METHOD, params: { uri: SECRET_URI } },
+    SkillsGetResultSchema,
+  );
+  assert.equal(rawGet.skill.uri, SECRET_URI);
+  assert.equal(rawGet.ttlMs, 60_000);
+  assert.equal(rawGet.cacheScope, "public");
+  assert.ok(!("nextCursor" in rawGet), "skills/get result has no nextCursor");
+  pass("skills/get: SEP-2549 ttlMs + cacheScope present (2026-07-28 scoping)");
+
   // 6. skills/get errors -32602 for a non-skill URI
   await assert.rejects(
     getSkill(client, "skill://no-such-skill/SKILL.md"),
@@ -102,6 +117,13 @@ export async function runChecks(client: Client): Promise<string> {
   const diceMd = await readSkill(client, dice);
   assert.match(diceMd, /Tabletop Dice/);
   pass("readSkill: digest + frontmatter verification passed");
+
+  // 7b. SKILL.md reads SHOULD carry mimeType text/markdown
+  const rawRead = await client.readResource({ uri: DICE_URI });
+  assert.equal(rawRead.contents.length, 1);
+  assert.equal(rawRead.contents[0]?.uri, DICE_URI);
+  assert.equal(rawRead.contents[0]?.mimeType, "text/markdown");
+  pass("resources/read: SKILL.md carries mimeType text/markdown");
 
   // 8. Verified supporting-file read (size + digest)
   const ref = await readSkillResource(client, dice, DICE_REF_URI);
