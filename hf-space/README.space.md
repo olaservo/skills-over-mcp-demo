@@ -11,7 +11,7 @@ short_description: "SEP-2640 v1 demo: Agent Skills served over MCP"
 
 # Skills-over-MCP — demo server
 
-A demo Model Context Protocol server serving [Agent Skills](https://agentskills.io/) per [SEP-2640 v1 (Skills Extension)](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640), built on the v2 TypeScript SDK (`@modelcontextprotocol/server`) and the experimental skills extension SDK ([`@olaservo/ext-skills`](https://www.npmjs.com/package/@olaservo/ext-skills)). Maintained by the [Skills Over MCP Working Group](https://modelcontextprotocol.io/community/working-groups/skills-over-mcp).
+A demo Model Context Protocol server serving [Agent Skills](https://agentskills.io/) per [SEP-2640 v1 (Skills Extension)](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640), built on the v2 TypeScript SDK (`@modelcontextprotocol/server` 2.4, whose `ext/skills` module serves the extension). Maintained by the [Skills Over MCP Working Group](https://modelcontextprotocol.io/community/working-groups/skills-over-mcp).
 
 ## Endpoint
 

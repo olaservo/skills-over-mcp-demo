@@ -1,6 +1,6 @@
 # skills-over-mcp-demo
 
-Demo MCP server that serves [Agent Skills](https://agentskills.io/) over MCP per [SEP-2640 v1 (Skills Extension)](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640), built on the v2 TypeScript SDK (`@modelcontextprotocol/server`) and the experimental skills extension SDK ([`@olaservo/ext-skills`](https://www.npmjs.com/package/@olaservo/ext-skills)).
+Demo MCP server that serves [Agent Skills](https://agentskills.io/) over MCP per [SEP-2640 v1 (Skills Extension)](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640), built on the v2 TypeScript SDK (`@modelcontextprotocol/server` 2.4, whose `ext/skills` module serves the extension).
 
 ## Quickstart
 
@@ -38,7 +38,7 @@ Claude Desktop / generic stdio host config:
 
 | SEP-2640 surface | Where |
 |---|---|
-| Capability declaration `capabilities.extensions["io.modelcontextprotocol/skills"]` | `registerSkillResources()` declares it before connect |
+| Capability declaration `capabilities.extensions["io.modelcontextprotocol/skills"]` | `SkillsExtension.attach()` declares it before connect |
 | `skills/list` — entries with verbatim frontmatter + complete `{uri, digest}` manifest | 3 listed skills |
 | `skills/get` — entry retrieval by URI, listed or not; `-32602` for non-skills | the unlisted `secret-menu` skill |
 | Partial listings + server `instructions` as a skill pointer | `secret-menu` is served but never enumerated; instructions point to it |
@@ -59,7 +59,7 @@ skill://release-notes-writer/SKILL.md         templates/ supporting file
 skill://secret-menu/SKILL.md                  UNLISTED — reachable via skills/get + instructions pointer only
 ```
 
-The smoke test (`src/smoke.ts`) exercises the client side of the SEP: capability gating, enumeration, unlisted-skill retrieval, digest + frontmatter verification on reads, unlisted-file rejection semantics, directory walking, and `discoverAndBuildCatalog()` producing a system-prompt catalog that merges the instructions-pointer skill with the listing.
+The smoke test (`src/smoke.ts`) exercises the client side of the SEP through the SDK's `SkillsClient`: capability gating, enumeration, unlisted-skill retrieval, digest + frontmatter verification on reads, unlisted-file rejection semantics, directory walking, and merging the instructions-pointer skill with the listing. Each run repeats the checks on a 2025-11-25 connection, where the caching attributes must be absent.
 
 ## Public endpoint (Hugging Face Space)
 
@@ -117,7 +117,8 @@ OpenAI's [MCP server plugin docs](https://developers.openai.com/plugins/build/mc
 ## Layout
 
 ```
-src/server.ts      shared factory: loadSkills() + registerSkillResources()
+src/server.ts      shared factory: loadSkills() + SkillsExtension.attach()
+src/skills.ts      SkillSource over the SDK catalog that keeps secret-menu out of listings
 src/index.ts       stdio entry point (serveStdio)
 src/http.ts        streamable HTTP entry point (createMcpHandler + @modelcontextprotocol/node)
 src/checks.ts      shared SEP-2640 client-side checks
