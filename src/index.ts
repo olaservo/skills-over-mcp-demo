@@ -22,7 +22,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
-import { buildServerFactory, loadSkills, logSkillMap } from "./server.js";
+import { buildServerFactory, loadSkills, logSkills } from "./server.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -38,14 +38,10 @@ const skillsDir = positionals[0]
   ? path.resolve(positionals[0])
   : path.resolve(__dirname, "../skills");
 
-const skillMap = loadSkills(skillsDir);
-logSkillMap(skillMap, skillsDir);
+const skills = await loadSkills(skillsDir);
+logSkills(skills, skillsDir);
 
-serveStdio(
-  buildServerFactory(skillMap, skillsDir, {
-    diceRoller: values["dice-roller"],
-  }),
-);
+serveStdio(buildServerFactory(skills, { diceRoller: values["dice-roller"] }));
 
 console.error(
   "[skills-over-mcp-demo] Extension: io.modelcontextprotocol/skills (directoryRead: true)",

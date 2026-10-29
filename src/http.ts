@@ -41,7 +41,7 @@ import {
   toNodeHandler,
 } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { buildServerFactory, loadSkills, logSkillMap } from "./server.js";
+import { buildServerFactory, loadSkills, logSkills } from "./server.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -64,16 +64,14 @@ const skillsDir = positionals[0]
   ? path.resolve(positionals[0])
   : path.resolve(__dirname, "../skills");
 
-const skillMap = loadSkills(skillsDir);
-logSkillMap(skillMap, skillsDir);
+const skills = await loadSkills(skillsDir);
+logSkills(skills, skillsDir);
 
 const LOCALHOST = ["localhost", "127.0.0.1", "[::1]"];
 const allowedHosts = [...LOCALHOST, ...values["allow-host"]];
 
 const handler = createMcpHandler(
-  buildServerFactory(skillMap, skillsDir, {
-    diceRoller: values["dice-roller"],
-  }),
+  buildServerFactory(skills, { diceRoller: values["dice-roller"] }),
 );
 const nodeHandler = toNodeHandler(handler);
 const validateHost = hostHeaderValidation(allowedHosts);

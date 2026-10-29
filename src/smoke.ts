@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Smoke test (stdio): spawns the built server as a child process and runs the
- * shared SEP-2640 checks over a stdio connection negotiated to the latest
- * protocol revision. Exits non-zero on any failed check.
+ * shared SEP-2640 checks over stdio, once negotiated to the latest protocol
+ * revision and once as a 2025-11-25 client. Exits non-zero on any failed
+ * check.
  *
  * Run with: npm run smoke
  *
@@ -11,29 +12,30 @@
 
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Client } from "@modelcontextprotocol/client";
+import { Client, type VersionNegotiationMode } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import { runChecks } from "./checks.js";
+import { LEGACY_PROTOCOL, MODERN_PROTOCOL, runChecks } from "./checks.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverPath = path.resolve(__dirname, "../dist/index.js");
 
-async function main(): Promise<void> {
+async function run(mode: VersionNegotiationMode, expectedProtocol: string): Promise<void> {
   const client = new Client(
     { name: "skills-demo-smoke", version: "0.1.0" },
-    { versionNegotiation: { mode: "auto" } },
+    { versionNegotiation: { mode } },
   );
   await client.connect(
     new StdioClientTransport({ command: process.execPath, args: [serverPath] }),
   );
 
-  console.log("Connected over stdio. Running checks:\n");
-  const catalog = await runChecks(client);
-
-  console.log("\n--- system-prompt catalog ---\n");
-  console.log(catalog);
-
+  console.log(`\nConnected over stdio (${expectedProtocol}). Running checks:\n`);
+  await runChecks(client, expectedProtocol);
   await client.close();
+}
+
+async function main(): Promise<void> {
+  await run("auto", MODERN_PROTOCOL);
+  await run("legacy", LEGACY_PROTOCOL);
   console.log("\nAll stdio checks passed.");
 }
 

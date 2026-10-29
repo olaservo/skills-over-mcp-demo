@@ -12,19 +12,11 @@
  * @license Apache-2.0
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
 import { McpServer } from "@modelcontextprotocol/server";
-import {
-  discoverSkills,
-  registerSkillResources,
-  type SkillMetadata,
-} from "@olaservo/ext-skills/server";
 import * as z from "zod/v4";
 import { registerAppResource, registerAppTool, RESOURCE_MIME_TYPE } from "./apps-helpers.js";
 import { NotationError, rollNotation } from "./dice.js";
-
-export type SkillMap = Map<string, SkillMetadata>;
+import { loadDemoSkills, type DemoSkills } from "./skills.js";
 
 export const SERVER_INSTRUCTIONS = [
   "This server exposes Agent Skills under the skill:// scheme.",
@@ -32,30 +24,30 @@ export const SERVER_INSTRUCTIONS = [
 ].join("\n");
 
 /**
- * Discover skills from disk (per-file SHA-256 digests are computed here,
- * once) and mark `secret-menu` unlisted: it is served but never enumerated,
+ * Load the skills folder (per-file SHA-256 digests are computed here, once)
+ * and mark `secret-menu` unlisted: it is served but never enumerated,
  * demonstrating the SEP's partial-listing baseline — hosts reach it through
  * the instructions pointer and confirm it via skills/get.
  */
-export function loadSkills(skillsDir: string): SkillMap {
-  const skillMap = discoverSkills(skillsDir);
-  const secretMenu = skillMap.get("secret-menu");
-  if (secretMenu) {
-    secretMenu.listed = false;
-  }
-  return skillMap;
+export function loadSkills(skillsDir: string): Promise<DemoSkills> {
+  return loadDemoSkills(skillsDir, {
+    unlisted: ["secret-menu"],
+    // SEP-2549 list-caching attributes (emitted on 2026-07-28+ connections
+    // only): a static filesystem catalog with nothing user-specific may be
+    // cached briefly and shared across authorization contexts.
+    cacheHint: { ttlMs: 60_000, cacheScope: "public" },
+  });
 }
 
-export function logSkillMap(skillMap: SkillMap, skillsDir: string): void {
+export function logSkills(skills: DemoSkills, skillsDir: string): void {
   console.error(
-    `[skills-over-mcp-demo] Discovered ${skillMap.size} skill(s) in ${skillsDir}`,
+    `[skills-over-mcp-demo] Discovered ${skills.entries.length} skill(s) in ${skillsDir}`,
   );
-  for (const [skillPath, skill] of skillMap) {
-    const files = 1 + skill.documents.length;
-    const tag = skill.listed === false ? " (unlisted)" : "";
-    console.error(
-      `  - skill://${skillPath}/SKILL.md (name: "${skill.name}", ${files} file(s))${tag}`,
-    );
+  for (const skill of skills.entries) {
+    const files =
+      skill.resources === "dynamic" ? "dynamic" : `${skill.resources.length} file(s)`;
+    const tag = skills.unlisted.has(skill.uri) ? " (unlisted)" : "";
+    console.error(`  - ${skill.uri} (name: "${skill.frontmatter.name}", ${files})${tag}`);
   }
 }
 
@@ -89,12 +81,11 @@ export interface ServerFactoryOptions {
 
 /**
  * Returns a factory building one McpServer per connection, with the skills
- * extension registered before the connection serves anything — capabilities
+ * extension attached before the connection serves anything — capabilities
  * ship in the handshake (initialize result or server/discover).
  */
 export function buildServerFactory(
-  skillMap: SkillMap,
-  skillsDir: string,
+  skills: DemoSkills,
   options: ServerFactoryOptions = {},
 ): () => McpServer {
   return () => {
@@ -103,15 +94,7 @@ export function buildServerFactory(
       { capabilities: { resources: {} }, instructions: SERVER_INSTRUCTIONS },
     );
 
-    registerSkillResources(server, skillMap, skillsDir, {
-      template: true,
-      directoryRead: true,
-      // SEP-2549 list-caching attributes (emitted on 2026-07-28+ connections
-      // only): a static filesystem catalog with nothing user-specific may be
-      // cached briefly and shared across authorization contexts.
-      ttlMs: 60_000,
-      cacheScope: "public",
-    });
+    skills.extension.attach(server);
 
     if (options.diceRoller) {
       registerDiceRoller(server);
